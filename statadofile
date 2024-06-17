@@ -1,0 +1,79 @@
+clear 
+cd "/Users/haivanle/Documents/Kellogg23"
+use "cps_wages_LFP_10pct.dta"
+summarize wage
+gen logwage = log(wage)
+
+sort sex
+by sex: sum logwage
+sort sex educ
+by sex: sum logwage
+
+bysort year: egen meanwage = mean(wage)
+bysort year: egen meanlogwage = mean(logwage)
+twoway line meanwage year
+twoway line meanlogwage year
+
+egen meanlogwage2 = mean(logwage), by(sex year)
+
+twoway (line meanlogwage2 year if sex == 1, sort lcolor(blue) lwidth(medium) lpattern(solid)) ///
+       (line meanlogwage2 year if sex == 2, sort lcolor(red) lwidth(medium) lpattern(dash)), ///
+       legend(order(1 "Men" 2 "Women") ring(0) pos(10)) ///
+       title("Changes in Mean Log Wage Over Time by Sex") ///
+       xlabel(, format(%ty)) ///
+       ylabel(, format(%9.2f)) ///
+       xtitle("Year") ///
+       ytitle("Mean Log Wage")
+	   
+
+* Calculate the mean labor force participation rate for each year
+collapse (mean) participation_rate=lfp, by(year)
+
+* Create a line chart for labor force participation rates over the years
+twoway (line participation_rate year, lcolor(blue) lwidth(medium) lpattern(solid)), ///
+       title("Labor Force Participation Rates Over Time") ///
+       xlabel(, format(%ty)) ///
+       ylabel(, format(%9.2f)) ///
+       xtitle("Year") ///
+       ytitle("Participation Rate")
+
+
+clear 
+cd "/Users/haivanle/Documents/Kellogg23"
+use "cps_wages_LFP_10pct.dta"
+
+
+* Calculate the mean labor force participation rate for each year
+collapse (mean) participation_rate=lfp, by(year sex)
+
+twoway (line participation_rate year if sex == 1, sort lcolor(blue) lwidth(medium) lpattern(solid)) ///
+       (line participation_rate year if sex == 2, sort lcolor(red) lwidth(medium) lpattern(dash)), ///
+       legend(order(1 "Men" 2 "Women") ring(0) pos(10)) ///
+       title("Changes in Labor Force Participation Rates Over Time by Sex") ///
+       xlabel(, format(%ty)) ///
+       ylabel(, format(%9.2f)) ///
+       xtitle("Year") ///
+       ytitle("Participation Rates")
+
+clear 
+cd "/Users/haivanle/Documents/Kellogg23"
+use "cps_wages_LFP_10pct.dta"
+
+collapse (mean) participation_rate=lfp if sex == 1 & age > 25, by(year age_group)
+	   
+twoway (line participation_rate year if age_group == 1, sort lcolor(blue) lwidth(medium) lpattern(solid)) ///
+       (line participation_rate year if age_group == 2, sort lcolor(red) lwidth(medium) lpattern(dash)) ///
+	   (line participation_rate year if age_group == 3, sort lcolor(green) lwidth(medium) lpattern(dot)), ///
+       legend(order(1 "Age 25-45" 2 "Age 45-65" 3 "Age 65+") ring(0) pos(10)) ///
+       title("Labor Force Participation Rates by Age Group for Males 25+") ///
+       xlabel(, format(%ty)) ///
+       ylabel(, format(%9.2f)) ///
+       xtitle("Year") ///
+       ytitle("Participation Rates")
+	   
+clear 
+cd "/Users/haivanle/Documents/Kellogg23"
+use "cps_wages_LFP_10pct.dta"
+	   
+reg lfp educ skilled age white if sex == 1 & age > 25
+reg lfp sex educ skilled age white
